@@ -1,10 +1,8 @@
-/* Refined JS: countdown + fullscreen + theme + poster + confetti
-   Keep script external for GitHub Pages compatibility.
-*/
+/* Update: confetti container now inside the card; fullscreen-safe logic; body scroll inside card */
 
-/* ---------- Helpers ---------- */
-const $ = (id) => document.getElementById(id);
-const pad = (n) => String(n).padStart(2, '0');
+/* Helpers */
+const $ = id => document.getElementById(id);
+const pad = n => String(n).padStart(2, '0');
 
 function nextJan6() {
   const now = new Date();
@@ -14,33 +12,24 @@ function nextJan6() {
   return t;
 }
 
-/* ---------- Elements ---------- */
-const daysEl = $('days');
-const hoursEl = $('hours');
-const minutesEl = $('minutes');
-const secondsEl = $('seconds');
-
-const fsBtn = $('fsBtn');
-const themeToggle = $('themeToggle');
-const posterBtn = $('posterBtn');
+/* Elements */
+const daysEl = $('days'), hoursEl = $('hours'), minutesEl = $('minutes'), secondsEl = $('seconds');
+const fsBtn = $('fsBtn'), themeToggle = $('themeToggle'), posterBtn = $('posterBtn');
+const card = $('card'), confettiRoot = $('confetti'), status = $('status');
 const appRoot = document.documentElement;
-const card = $('card');
-const status = $('status');
-const confettiRoot = $('confetti');
 
 let target = nextJan6();
 
-/* ---------- Countdown logic ---------- */
+/* Countdown */
 function updateCountdown() {
   const now = new Date();
   let diff = target - now;
   if (diff <= 0) {
-    // celebrate then retarget
+    // celebrate, retarget and continue
     celebrate();
     target = nextJan6();
     diff = target - now;
   }
-
   const total = Math.max(0, Math.floor(diff / 1000));
   const days = Math.floor(total / 86400);
   const hours = Math.floor((total % 86400) / 3600);
@@ -53,110 +42,93 @@ function updateCountdown() {
   secondsEl.textContent = pad(seconds);
 }
 
-/* Align tick to real second */
-function startTicker() {
+/* Tick aligned to seconds */
+function startTicker(){
   updateCountdown();
-  const msToNext = 1000 - (performance.now() % 1000);
+  const ms = 1000 - (performance.now() % 1000);
   setTimeout(() => {
     updateCountdown();
     setInterval(updateCountdown, 1000);
-  }, msToNext);
+  }, ms);
 }
 startTicker();
 
-/* ---------- Fullscreen (robust) ---------- */
-async function enterFullscreen() {
-  try {
-    const el = document.documentElement;
-    if (el.requestFullscreen) await el.requestFullscreen();
-    else if (el.webkitRequestFullscreen) await el.webkitRequestFullscreen();
-    else if (el.msRequestFullscreen) await el.msRequestFullscreen();
-  } catch (e) {
-    console.warn('Failed to enter fullscreen', e);
-  }
+/* Fullscreen: fix card to viewport */
+async function enterFS() {
+  try { if (document.documentElement.requestFullscreen) await document.documentElement.requestFullscreen();
+    else if (document.documentElement.webkitRequestFullscreen) await document.documentElement.webkitRequestFullscreen();
+    else if (document.documentElement.msRequestFullscreen) await document.documentElement.msRequestFullscreen();
+  } catch (e) { console.warn('enterFS', e); }
 }
-async function exitFullscreen() {
-  try {
-    if (document.exitFullscreen) await document.exitFullscreen();
+async function exitFS() {
+  try { if (document.exitFullscreen) await document.exitFullscreen();
     else if (document.webkitExitFullscreen) await document.webkitExitFullscreen();
     else if (document.msExitFullscreen) await document.msExitFullscreen();
-  } catch (e) {
-    console.warn('Failed to exit fullscreen', e);
-  }
+  } catch (e) { console.warn('exitFS', e); }
 }
 
 fsBtn.addEventListener('click', async () => {
   const isFS = !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
-  if (!isFS) await enterFullscreen();
-  else await exitFullscreen();
+  if (!isFS) await enterFS();
+  else await exitFS();
 });
 
 function updateFsUI() {
   const isFS = !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
   fsBtn.textContent = isFS ? '⤫ Exit Full' : '⛶ Full';
   fsBtn.setAttribute('aria-pressed', String(isFS));
-  // When fullscreen, optionally enable poster-mode UI by default
-  if (isFS && card.classList.contains('poster-mode')) {
-    // poster-mode already applied
-  }
 }
 document.addEventListener('fullscreenchange', updateFsUI);
 document.addEventListener('webkitfullscreenchange', updateFsUI);
 document.addEventListener('msfullscreenchange', updateFsUI);
 
-/* ---------- Poster mode (hide header/footer) ---------- */
+/* Poster mode toggles header/footer */
 posterBtn.addEventListener('click', () => {
-  const isPoster = card.classList.toggle('poster-mode');
-  posterBtn.textContent = isPoster ? '🖼️ Poster On' : '🖼 Poster';
+  const on = card.classList.toggle('poster-mode');
+  posterBtn.textContent = on ? '🖼️ Poster On' : '🖼 Poster';
 });
 
-/* ---------- Theme toggle (dark default) ---------- */
+/* Theme toggle (dark default) */
 function applyTheme(name) {
   if (name === 'light') {
-    appRoot.setAttribute('data-theme', 'light');
+    appRoot.setAttribute('data-theme','light');
     themeToggle.textContent = '🌙 Dark';
-    themeToggle.setAttribute('aria-pressed', 'true');
     status.textContent = 'Light mode — saved';
   } else {
-    appRoot.removeAttribute('data-theme'); // dark default
+    appRoot.removeAttribute('data-theme');
     themeToggle.textContent = '🌤 Light';
-    themeToggle.setAttribute('aria-pressed', 'false');
     status.textContent = 'Dark mode — saved';
   }
-  try { localStorage.setItem('countdown-theme', name); } catch (e) {}
+  try { localStorage.setItem('countdown-theme', name); } catch(e) {}
 }
-
-// init theme (dark default unless user chose light)
-(function initTheme() {
+(function initTheme(){
   const saved = localStorage.getItem('countdown-theme');
-  if (saved === 'light') applyTheme('light');
-  else applyTheme('dark');
+  if (saved === 'light') applyTheme('light'); else applyTheme('dark');
 })();
-
 themeToggle.addEventListener('click', () => {
   const isLight = appRoot.getAttribute('data-theme') === 'light';
   applyTheme(isLight ? 'dark' : 'light');
 });
 
-/* ---------- Keyboard shortcuts ---------- */
+/* Keyboard shortcuts */
 document.addEventListener('keydown', (e) => {
   if (e.key === 'f' || e.key === 'F') fsBtn.click();
   if (e.key === 'd' || e.key === 'D') themeToggle.click();
   if (e.key === 'p' || e.key === 'P') posterBtn.click();
 });
 
-/* ---------- Confetti (lightweight) ---------- */
+/* Confetti inside card - constrained to card bounds */
 function makePiece() {
   const el = document.createElement('div');
   el.className = 'confetti-piece';
-  // random size and style
-  const size = Math.floor(Math.random() * 10) + 6;
-  el.style.width = `${size}px`;
-  el.style.height = `${Math.floor(size * 0.6)}px`;
+  const w = 6 + Math.floor(Math.random()*10);
+  el.style.width = `${w}px`;
+  el.style.height = `${Math.max(4, Math.floor(w*0.6))}px`;
   el.style.background = ['#ff6b6b','#ffd166','#60a5fa','#34d399','#f472b6'][Math.floor(Math.random()*5)];
   el.style.position = 'absolute';
-  el.style.left = `${Math.random() * 100}%`;
-  el.style.top = '-10%';
+  // place relative to card width
+  el.style.left = `${Math.random() * (card.clientWidth - 20)}px`;
+  el.style.top = `-20px`;
   el.style.opacity = '0.95';
   el.style.borderRadius = '2px';
   el.style.willChange = 'transform, opacity';
@@ -164,12 +136,10 @@ function makePiece() {
 }
 
 function celebrate() {
-  // don't spam if user prefers reduced motion
   if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-
-  const count = 40;
-  const frag = document.createDocumentFragment();
+  const count = 30;
   const pieces = [];
+  const frag = document.createDocumentFragment();
   for (let i=0;i<count;i++){
     const p = makePiece();
     frag.appendChild(p);
@@ -177,133 +147,53 @@ function celebrate() {
   }
   confettiRoot.appendChild(frag);
 
-  // animate pieces
-  pieces.forEach((p, i) => {
-    const delay = i * 10;
-    const duration = 1600 + Math.random()*800;
-    const dx = (Math.random() - 0.5) * 1200; // horizontal travel
+  pieces.forEach((p,i) => {
+    const delay = i * 12;
+    const duration = 1200 + Math.random()*900;
+    const dx = (Math.random() - 0.5) * (card.clientWidth * 0.8);
+    const dy = card.clientHeight + 100 + Math.random()*200;
     const rotate = (Math.random() - 0.5) * 720;
     p.animate([
       { transform: `translate3d(0,0,0) rotate(0deg)`, opacity:1 },
-      { transform: `translate3d(${dx}px, ${window.innerHeight + 200}px,0) rotate(${rotate}deg)`, opacity:0.6 }
+      { transform: `translate3d(${dx}px, ${dy}px,0) rotate(${rotate}deg)`, opacity:0.6 }
     ], {
       duration,
       easing: 'cubic-bezier(.2,.8,.2,1)',
       delay
     });
-
-    // cleanup
-    setTimeout(()=> {
-      if (p && p.parentNode) p.parentNode.removeChild(p);
-    }, duration + delay + 60);
+    setTimeout(()=> { if (p && p.parentNode) p.parentNode.removeChild(p); }, duration + delay + 80);
   });
+
+  // announce to SR
+  try {
+    const live = document.createElement('div');
+    live.setAttribute('role','status');
+    live.setAttribute('aria-live','polite');
+    live.style.position = 'absolute';
+    live.style.left = '-9999px';
+    live.textContent = 'Countdown reached 6 January.';
+    document.body.appendChild(live);
+    setTimeout(()=> document.body.removeChild(live), 3000);
+  } catch(e){}
 }
 
-/* ---------- Ensure accurate time after tab inactive ---------- */
-window.addEventListener('visibilitychange', () => {
+/* keep accurate after tab hidden */
+document.addEventListener('visibilitychange', () => {
   if (!document.hidden) {
-    // recompute target if system time changed
     if (new Date() > target) target = nextJan6();
     updateCountdown();
   }
 });
 
-/* ---------- Resize handling to avoid visual overflow ---------- */
+/* resize: adjust confetti positioning safe */
 window.addEventListener('resize', () => {
-  // force small reflow to avoid overflow in some browsers
+  // nothing heavy; keep card layout stable
   card.style.transform = 'translateZ(0)';
-  requestAnimationFrame(() => card.style.transform = '');
+  requestAnimationFrame(()=> card.style.transform = '');
 });
 
-/* ---------- Accessibility: announce when reaching zero ---------- */
-const announce = (message) => {
-  try {
-    const live = document.createElement('div');
-    live.setAttribute('role', 'status');
-    live.setAttribute('aria-live', 'polite');
-    live.style.position = 'absolute';
-    live.style.left = '-9999px';
-    live.textContent = message;
-    document.body.appendChild(live);
-    setTimeout(() => document.body.removeChild(live), 3000);
-  } catch (e) {}
-}
-
-/* trigger celebrate + announce */
-function celebrateAndAnnounce() {
-  celebrate();
-  announce('Countdown reached 6 January. Happy!'); // screen reader
-}
-
-/* Override celebrate to also announce */
-function celebrate() {
-  celebrateAndAnnounceOriginal();
-}
-
-/* Save original celebrate function and redefine to include announce */
-const celebrateAndAnnounceOriginal = (function() {
-  // closure: return original logic (copied here to keep single function definition)
-  return function() {
-    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const count = 40;
-    const frag = document.createDocumentFragment();
-    const pieces = [];
-    for (let i=0;i<count;i++){
-      const p = (function(){
-        const el = document.createElement('div');
-        el.className = 'confetti-piece';
-        const size = Math.floor(Math.random() * 10) + 6;
-        el.style.width = `${size}px`;
-        el.style.height = `${Math.floor(size * 0.6)}px`;
-        el.style.background = ['#ff6b6b','#ffd166','#60a5fa','#34d399','#f472b6'][Math.floor(Math.random()*5)];
-        el.style.position = 'absolute';
-        el.style.left = `${Math.random() * 100}%`;
-        el.style.top = '-10%';
-        el.style.opacity = '0.95';
-        el.style.borderRadius = '2px';
-        el.style.willChange = 'transform, opacity';
-        return el;
-      })();
-      frag.appendChild(p);
-      pieces.push(p);
-    }
-    confettiRoot.appendChild(frag);
-
-    pieces.forEach((p, i) => {
-      const delay = i * 10;
-      const duration = 1600 + Math.random()*800;
-      const dx = (Math.random() - 0.5) * 1200;
-      const rotate = (Math.random() - 0.5) * 720;
-      p.animate([
-        { transform: `translate3d(0,0,0) rotate(0deg)`, opacity:1 },
-        { transform: `translate3d(${dx}px, ${window.innerHeight + 200}px,0) rotate(${rotate}deg)`, opacity:0.6 }
-      ], {
-        duration,
-        easing: 'cubic-bezier(.2,.8,.2,1)',
-        delay
-      });
-      setTimeout(()=> { if (p && p.parentNode) p.parentNode.removeChild(p); }, duration + delay + 60);
-    });
-
-    // screen reader announce
-    try {
-      const live = document.createElement('div');
-      live.setAttribute('role', 'status');
-      live.setAttribute('aria-live', 'polite');
-      live.style.position = 'absolute';
-      live.style.left = '-9999px';
-      live.textContent = 'Countdown reached 6 January.';
-      document.body.appendChild(live);
-      setTimeout(() => document.body.removeChild(live), 3000);
-    } catch (e) {}
-  };
-})();
-
-/* Expose celebrate to module functions above */
-window.celebrate = celebrateAndAnnounceOriginal;
-
-/* ---------- small safety: re-evaluate target on focus ---------- */
-window.addEventListener('focus', () => {
-  if (new Date() > target) target = nextJan6();
+/* final: ensure initial layout/readiness */
+window.addEventListener('load', () => {
+  // ensure card has correct min-height
   updateCountdown();
 });
