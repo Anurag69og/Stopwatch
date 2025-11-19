@@ -5,25 +5,18 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>🎉 Countdown to 6 January</title>
 
-  <!-- performance hints -->
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-
-  <!-- Google / designed fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Poppins:wght@300;500;700&family=Rubik:wght@400;700&display=swap" rel="stylesheet">
 
   <meta name="theme-color" content="#0b0e12">
-
-  <!-- styles -->
   <link rel="stylesheet" href="styles.css">
-
-  <!-- script (deferred) -->
   <script src="script.js" defer></script>
 </head>
 <body>
   <div id="app" class="app" data-theme="dark">
     <main class="card" id="card" role="application" aria-label="Countdown card">
-      <!-- decorative elements -->
+      <!-- decorative -->
       <div class="decor r1" aria-hidden="true"></div>
       <div class="decor r2" aria-hidden="true"></div>
       <div class="decor r3" aria-hidden="true"></div>
@@ -39,14 +32,12 @@
 
         <div class="controls" role="toolbar" aria-label="Controls">
           <button id="posterBtn" class="control-btn" title="Toggle poster / UI hide (fullscreen poster)">🖼 Poster</button>
-
           <button id="themeToggle" class="control-btn" aria-pressed="false" title="Switch to Light mode">🌤 Light</button>
-
           <button id="fsBtn" class="control-btn primary" aria-pressed="false" title="Toggle fullscreen">⛶ Full</button>
         </div>
       </header>
 
-      <!-- center content -->
+      <!-- body (scrollable if content is tall) -->
       <section class="card-body" id="cardBody">
         <div class="subtitle" id="subtitle">There are</div>
 
@@ -81,10 +72,10 @@
         <div class="footer-left">Auto-updating • Press <kbd>F</kbd> to toggle fullscreen</div>
         <div class="footer-right" id="status" aria-live="polite">Dark mode — saved</div>
       </footer>
-    </main>
 
-    <!-- lightweight confetti container -->
-    <div id="confetti" aria-hidden="true"></div>
+      <!-- confetti container moved inside card to avoid overflow outside window -->
+      <div id="confetti" aria-hidden="true"></div>
+    </main>
   </div>
 </body>
 </html>
