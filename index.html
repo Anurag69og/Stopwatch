@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>🎉 Countdown to 6 January</title>
+  <title>🎉 Countdown to 6 January — Half Card Switch</title>
 
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -16,12 +16,6 @@
 <body>
   <div id="app" class="app" data-theme="dark">
     <main class="card" id="card" role="application" aria-label="Countdown card">
-      <!-- decorative -->
-      <div class="decor r1" aria-hidden="true"></div>
-      <div class="decor r2" aria-hidden="true"></div>
-      <div class="decor r3" aria-hidden="true"></div>
-      <div class="decor r4" aria-hidden="true"></div>
-
       <!-- header -->
       <header class="card-header" id="cardHeader">
         <h1 class="title">
@@ -31,41 +25,59 @@
         </h1>
 
         <div class="controls" role="toolbar" aria-label="Controls">
-          <button id="posterBtn" class="control-btn" title="Toggle poster / UI hide (fullscreen poster)">🖼 Poster</button>
+          <button id="halfSwitchBtn" class="control-btn" title="Switch halves (toggle)">🔁 Switch</button>
+          <button id="posterBtn" class="control-btn" title="Toggle poster / UI hide">🖼 Poster</button>
           <button id="themeToggle" class="control-btn" aria-pressed="false" title="Switch to Light mode">🌤 Light</button>
           <button id="fsBtn" class="control-btn primary" aria-pressed="false" title="Toggle fullscreen">⛶ Full</button>
         </div>
       </header>
 
-      <!-- body (scrollable if content is tall) -->
-      <section class="card-body" id="cardBody">
-        <div class="subtitle" id="subtitle">There are</div>
+      <!-- panels wrapper (two halves) -->
+      <div class="panels" id="panels" aria-live="polite">
+        <!-- LEFT PANEL (Countdown) -->
+        <section class="panel left-panel" id="leftPanel">
+          <div class="panel-inner">
+            <div class="subtitle">There are</div>
 
-        <div class="count-grid" role="group" aria-label="Countdown values">
-          <div class="count-box" aria-live="polite">
-            <div class="count-num" id="days">0</div>
-            <div class="count-label">Days 🗓️</div>
+            <div class="count-grid" role="group" aria-label="Countdown values">
+              <div class="count-box">
+                <div class="count-num" id="days">0</div>
+                <div class="count-label">Days 🗓️</div>
+              </div>
+              <div class="count-box">
+                <div class="count-num" id="hours">00</div>
+                <div class="count-label">Hours ⏰</div>
+              </div>
+              <div class="count-box">
+                <div class="count-num" id="minutes">00</div>
+                <div class="count-label">Minutes ⏱️</div>
+              </div>
+              <div class="count-box">
+                <div class="count-num" id="seconds">00</div>
+                <div class="count-label">Seconds ⌛</div>
+              </div>
+            </div>
+
+            <div class="to-text">to</div>
+            <div class="big-date" id="bigDate">6 January! 🎉</div>
           </div>
+        </section>
 
-          <div class="count-box" aria-live="polite">
-            <div class="count-num" id="hours">00</div>
-            <div class="count-label">Hours ⏰</div>
+        <!-- RIGHT PANEL (Info / Celebrate) -->
+        <section class="panel right-panel" id="rightPanel">
+          <div class="panel-inner">
+            <div class="right-title">Celebrate 🎊</div>
+            <p class="right-text">Switch here to see celebration, message or controls. When the countdown reaches zero, confetti will play inside this panel.</p>
+
+            <div class="right-actions">
+              <button id="celebrateBtn" class="control-btn">🎉 Celebrate now</button>
+              <button id="resetBtn" class="control-btn">↺ Reset Target</button>
+            </div>
+
+            <div class="right-note">Tip: press <kbd>S</kbd> to toggle switch, <kbd>F</kbd> fullscreen, <kbd>D</kbd> theme.</div>
           </div>
-
-          <div class="count-box" aria-live="polite">
-            <div class="count-num" id="minutes">00</div>
-            <div class="count-label">Minutes ⏱️</div>
-          </div>
-
-          <div class="count-box" aria-live="polite">
-            <div class="count-num" id="seconds">00</div>
-            <div class="count-label">Seconds ⌛</div>
-          </div>
-        </div>
-
-        <div class="to-text">to</div>
-        <div class="big-date" id="bigDate">6 January! 🎉</div>
-      </section>
+        </section>
+      </div>
 
       <!-- footer -->
       <footer class="card-footer" id="cardFooter">
@@ -73,7 +85,7 @@
         <div class="footer-right" id="status" aria-live="polite">Dark mode — saved</div>
       </footer>
 
-      <!-- confetti container moved inside card to avoid overflow outside window -->
+      <!-- confetti container inside card (clipped to card) -->
       <div id="confetti" aria-hidden="true"></div>
     </main>
   </div>
